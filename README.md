@@ -1,48 +1,69 @@
-# Webcam based Gaze Estimation
-Estimate gaze on computer screen
+# Eye-Gaze Keyboard
 
-## Installation Guidelines
+This repository provides a virtual keyboard controlled by eye gaze estimation or mouse input. Follow the instructions below to set up and run the project.
 
-- [ ] Set Up Python Virtual Environment
+## Prerequisites
 
-    Create a virtual Python environment to avoid dependency conflicts. To create a virtual environment (Python 3.8), use the following command or create a virtual environment with Anaconda navigator:
+Ensure you have the following installed on your system:
 
-        conda create --name <env_name> python=3.8
+- Python (3.7 or higher)
+- pip (Python package installer)
 
-- [ ] Activate Virtual Environment
+## Setup Instructions
 
-    Activate the newly created Python virtual environment by issuing this command:    
+1. **Create a Python Virtual Environment**
 
-        conda activate <env_name>
+   ```bash
+   python -m venv venv
+   ```
 
-- [ ] Set Up and Update PIP to the Highest Version
+   Activate the virtual environment:
+   - On Windows:
+     ```bash
+     venv\Scripts\activate
+     ```
+   - On macOS/Linux:
+     ```bash
+     source venv/bin/activate
+     ```
 
-    Make sure pip is installed in your environment and upgrade it to the latest version by issuing the following command:
+2. **Install Required Packages**
 
-        python -m pip install --upgrade pip
+   Install the dependencies listed in `requirements.txt`:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-- [ ] Install the Package
+## Running the Application
 
-    To install OpenVINO Development Tools into the existing environment with the deep learning framework of your choice, run the following command:
+### 1. Run the Keyboard with Eye Gaze Estimation
 
-        pip install openvino-dev
-        pip install -r requirements.txt or conda install --file requirements.txt
+   Execute the following command:
+   ```bash
+   python src/main.py
+   ```
 
-    Additionally to OpenVino we added the demo programm from pl_gaze_estimation (https://github.com/hysts/pytorch_mpiigaze_demo), training code for the pl_gaze_estimation using MPIIGaze, MPIIFaceGaze, and ETH-XGaze are available under: https://github.com/hysts/pl_gaze_estimation/tree/main
+   This mode uses eye gaze tracking to control the keyboard.
 
-    This model however, runs beter under Ubuntu, but it was tested under Windows as well. To use the pl_gaze_estimation model run:
+### 2. Run the Keyboard Demo with Mouse Control
 
-        pip install -r requirements_pl_gaze.txt
+   Execute the following command:
+   ```bash
+   python src/gaze_keyboard.py
+   ```
 
-- [ ] Copy the file openh264-1.8.0-win64.dll into the environment path (e.g. C:\Anaconda3\envs\name_of_env)
+   This mode allows you to use a mouse as an input to interact with the keyboard.
 
-- [ ] run main.py to test the application with the OpenVino model
+### Optional: Run Camera Calibration Using Checkerboard
 
-- [ ] run main_pl.py to test the application with the pl_gaze_estimation model (https://github.com/hysts/pytorch_mpiigaze_demo)
+   If you need to calibrate the camera, run the following command:
+   ```bash
+   python camera_data/main_camera_calibration.py
+   ```
 
-- [ ] in order to run main_compareWithTobii.py you need to generate a exe file that runs Tobii Eye Tracker 5, for this you need the sdk dll for Tobii Eye Tracker 5
+   This step is useful for improving accuracy when using eye gaze estimation.
 
-## Credits
-If you use the code in the academic context, please cite:
+## Additional Notes
 
-Lucas Falch and Katrin Solveig Lohan, "Webcam-based gaze estimation for computer screen interaction", Frontiers in Robotics and AI, Volume 11 - 2024 | https://doi.org/10.3389/frobt.2024.1369566
+- Make sure your environment supports the required hardware and software dependencies for eye gaze estimation.
+- For any issues or questions, refer to the project documentation or open an issue in the repository.
