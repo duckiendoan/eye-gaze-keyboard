@@ -32,14 +32,20 @@ def main(dir):
         print("============================")
         print(f"STransG\n{np.array2string(STransG, formatter={'float': lambda x: f'{x:.2f}'})}")
 
-        homtrans.RunGazeOnScreen(model, cap, sfm=True)
-
+        # homtrans.RunGazeOnScreen(model, cap, sfm=True)
+        import multiprocessing
+        from gaze_keyboard import run_keyboard_process
+        mouse_coords = multiprocessing.Array('i', [0, 0])
+        keyboard_proc = multiprocessing.Process(target=run_keyboard_process, args=(mouse_coords,))
+        keyboard_proc.start()
+        homtrans.RunGazeKeyboard(model, cap, mouse_coords, sfm=True)
+        keyboard_proc.join()
         # gocv.PlotPupils(gray_image, prediction, morphedMask, falseColor, centroid)
 
     except Exception as e:
         print(f"Something wrong when running EyeModel: {e}")
 
 if __name__ == '__main__':
-    dir = "C:\\temp\\WebCamGazeEstimation\\"
+    dir = "."
     main(dir)
 

@@ -6,10 +6,10 @@ import cv2
 import os
 
 # Define the size of the checkerboard pattern
-pattern_size = (8, 5)
+pattern_size = (8, 3)
 
 # Define the size of the square in the checkerboard pattern (in mm)
-square_size = 22.5
+square_size = 14.5
 
 # Create an object to store the calibration data
 calibration_data = {
@@ -34,42 +34,76 @@ objp[:, :2] = np.mgrid[0:pattern_size[0], 0:pattern_size[1]].T.reshape(-1, 2) * 
 cap=cv2.VideoCapture(0, cv2.CAP_DSHOW)
 # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 count = 0
-while True:
-    # Capture a frame from the camera
-    ret, frame = cap.read()
+print("Press 'c' to capture an image for calibration.")
+print("Press 'q' to start the calibration process and exit.")
 
-    # Convert the frame to grayscale
+while True:
+    # # Capture a frame from the camera
+    # ret, frame = cap.read()
+
+    # # Convert the frame to grayscale
+    # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # # Find the corners of the checkerboard pattern in the grayscale image
+    # ret, corners = cv2.findChessboardCorners(gray, pattern_size, None)
+
+    # # If corners are found, add them to the list of image points and object points
+    # if ret == True:
+    #     count += 1
+    #     obj_points.append(objp)
+    #     cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
+    #     img_points.append(corners)
+
+    #     # Draw the corners on the image
+    #     cv2.drawChessboardCorners(frame, pattern_size, corners, ret)
+
+    # # Display the image
+    # cv2.imshow('Calibration', frame)
+
+    # # Wait for a key press
+    # key_pressed = cv2.waitKey(60)
+
+    # if key_pressed == 27 or count == 40:
+    #     break
+    ret, frame = cap.read()
+    if not ret:
+        print("Error: Could not read frame from webcam.")
+        break
+
+    # Convert to grayscale
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    # Find the corners of the checkerboard pattern in the grayscale image
-    ret, corners = cv2.findChessboardCorners(gray, pattern_size, None)
+    # Display the current frame
+    cv2.imshow('Webcam Calibration', cv2.resize(frame, (960, 540)))
 
-    # If corners are found, add them to the list of image points and object points
-    if ret == True:
-        count += 1
-        obj_points.append(objp)
-        cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
-        img_points.append(corners)
-
-        # Draw the corners on the image
-        cv2.drawChessboardCorners(frame, pattern_size, corners, ret)
-
-    # Display the image
-    cv2.imshow('Calibration', frame)
-
-    # Wait for a key press
-    key_pressed = cv2.waitKey(60)
-
-    if key_pressed == 27 or count == 40:
+    # Wait for key press
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord('c'):  # Capture frame
+        ret, corners = cv2.findChessboardCorners(gray, pattern_size, None)
+        if ret:
+            obj_points.append(objp)
+            criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+            corners_refined = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
+            img_points.append(corners_refined)
+            print(f"Captured frame {len(obj_points)} added for calibration. {gray.shape}")
+            # Draw and display the corners
+            cv2.drawChessboardCorners(frame, pattern_size, corners, ret)
+            cv2.imshow('Webcam Calibration', cv2.resize(frame, (960, 540)))
+            cv2.waitKey(1000)  # Pause briefly to show the drawn corners
+        else:
+            print("Chessboard corners not found. Try again.")
+    elif key == ord('q'):  # Quit and start calibration
         break
 
 # Release the camera
 cap.release()
+cv2.destroyAllWindows()
 
+print(f"Calibrating camera with {len(obj_points)} images...")
 # Calibrate the camera
 ret, camera_matrix, dist_coeffs, rvecs, tvecs = cv2.calibrateCamera(obj_points, img_points, gray.shape[::-1], None, None)
 

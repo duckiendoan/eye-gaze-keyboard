@@ -59,6 +59,36 @@ class HomTransform:
         df = df.reset_index(drop=True)
         df.to_csv(os.path.join(self.dir, "results", "MyGazeTracking.csv"))
 
+    def RunGazeKeyboard(self, model, cap, mouse_coords, sfm=False):
+        frame_prev = None
+        WTransG1 = np.eye(4)
+        while cap.isOpened():
+            try:
+                ret, frame = cap.read()
+            except StopIteration:
+                break
+
+            eye_info = model.get_gaze(frame)
+            gaze = eye_info['gaze']
+
+            if sfm:
+                if frame_prev is not None:                
+                    WTransG1, WTransG2, W_P = self.sfm.get_GazeToWorld(model, frame_prev, frame)        # WtG1 is a unit vector, has to be scaled            
+                frame_prev = frame
+                FSgaze, Sgaze, Sgaze2 = self._getGazeOnScreen_sfm(gaze, WTransG1)
+            else:
+                FSgaze, Sgaze, Sgaze2 = self._getGazeOnScreen(gaze)
+
+            FSgaze = self._mm2pixel(FSgaze).squeeze()
+            mouse_coords[0], mouse_coords[1] = int(FSgaze[0]), int(FSgaze[1])
+            print(FSgaze)
+            cv2.waitKey(5)
+            if keyboard.is_pressed('esc'):
+                print("Recording stopped")
+                break
+
+        cap.release()
+
     def RunGazeOnScreen(self, model, cap, sfm=False):
         """ Present different trajectories on screen and record gaze
         """
@@ -79,6 +109,7 @@ class HomTransform:
             # gazeframe, SetPos = target.DrawRectangularTargets(white_frame, self._mm2pixel(FSgaze))
             # gazeframe, SetPos = target.DrawSingleTargets(white_frame, self._mm2pixel(FSgaze))
             gazeframe, SetPos = target.DrawTargetInMiddle(white_frame, self._mm2pixel(FSgaze))
+            # print(self._mm2pixel(FSgaze))
 
             try:
                 ret, frame = cap.read()
@@ -146,6 +177,9 @@ class HomTransform:
             """ Draw Target on white frame """
             frame2 = frame.copy()
             cv2.circle(frame2, tuple(SetPos), 15, (0, 0, 255), -1)
+            text_size = cv2.getTextSize("Calibration: Look at the red dot without moving your head", cv2.FONT_HERSHEY_SIMPLEX, 1, 2)[0]
+            cv2.putText(frame2, "Calibration: Look at the red dot without moving your head", (frame2.shape[1] // 2 - text_size[0] // 2, int(0.05 * frame2.shape[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
             length = 25
             thickness = 4
             if idx == 9:
@@ -475,9 +509,10 @@ class HomTransform:
     def _mm2pixel(self, vector_mm):
         vector = vector_mm.copy()
         if vector.ndim == 2 and vector.shape[0] == 3:
-            vector[0] = int(vector[0] * self.width/self.width_mm)
-            vector[1] = int(vector[1] * self.height/self.height_mm)
-            vector[2] = int(vector[2])
+            vector[0] = vector[0] * self.width/self.width_mm
+            vector[1] = vector[1] * self.height/self.height_mm
+            vector[2] = vector[2]
+            vector = vector.astype(int)
         elif vector.ndim == 3 and vector.shape[1] == 3:
             vector[:,0] = (vector[:,0] * self.width/self.width_mm).astype(int)
             vector[:,1] = (vector[:,1] * self.height/self.height_mm).astype(int)
